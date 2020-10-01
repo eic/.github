@@ -1,0 +1,5 @@
+{
+    "name": "EIC CI against CVMFS Software Stack",
+    "description": "EIC CI workflow template.",
+    "iconName": "githubactions"
+}
