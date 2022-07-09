@@ -1,0 +1,5 @@
+{
+    "name": "Run against LCG view on CVMFS",
+    "description": "LCG workflow template.",
+    "iconName": "githubactions"
+}

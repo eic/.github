@@ -1,0 +1,5 @@
+{
+    "name": "Run inside EIC shell on CVMFS",
+    "description": "EIC shell workflow template.",
+    "iconName": "githubactions"
+}

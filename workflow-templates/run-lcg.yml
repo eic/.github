@@ -1,0 +1,26 @@
+name: Run against LCG view on CVMFS
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        LCG: ["LCG_101/x86_64-ubuntu2004-gcc9-opt"]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cvmfs-contrib/github-action-cvmfs@v2
+      with:
+        cvmfs_repositories: 'sft.cern.ch,geant4.cern.ch'
+    - uses: aidasoft/run-lcg-view@v1
+      with:
+        release-platform: ${{ matrix.LCG }}
+        run: |
+          gcc --version
+          which gcc
