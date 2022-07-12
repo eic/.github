@@ -2,4 +2,4 @@ This organization collects all Electron-Ion Collider (EIC) software, repositorie
 
 ## How to join?
 
-All EIC users may request to become part of this organization. Simply email the [EIC User Group Software Working Group conveners](eicug-software-conveners@eicug.org) from your institutional email address with your GitHub account and whether you or your sponsor/advisor is a member of the EIC User Group listed on the [Phone Book](https://phonebook.sdcc.bnl.gov/eic/client/).
+All EIC users may request to become part of this organization. Simply email the [EIC User Group Software Working Group conveners](mailto:eicug-software-conveners@eicug.org) from your institutional email address with your GitHub account and whether you or your sponsor/advisor is a member of the EIC User Group listed on the [Phone Book](https://phonebook.sdcc.bnl.gov/eic/client/).
