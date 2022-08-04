@@ -1,7 +1,7 @@
-This organization collects all Electron-Ion Collider (EIC) software, repositories, documentation and resources. It is maintained by the EIC Software Group and the EPIC Collaboration Working Groups.
+This organization collects all Electron-Ion Collider (EIC) software, repositories, documentation and resources. It is maintained by the EIC User Group Software Working Group and the EPIC Collaboration Working Groups.
 
 ## How to join?
 
-All EIC users may request to become part of this organization. Simply email the [EIC User Group Software Working Group conveners](mailto:eicug-software-conveners@eicug.org) from your institutional email address with your GitHub account and whether you or your sponsor/advisor is a member of the EIC User Group listed on the [Phone Book](https://phonebook.sdcc.bnl.gov/eic/client/). This will give you read access to all public repositories.
+All EIC users may join this organization. Contact the [Software Working Group conveners](mailto:eicug-software-conveners@eicug.org) from your institutional email address with your GitHub account and whether you or your sponsor/advisor is listed in the [EIC User Group Phone Book](https://phonebook.sdcc.bnl.gov/eic/client/). Members can contact the admins at [eic/admins](https://github.com/orgs/eic/teams/admins).
 
-You may also wish to join teams such as [EPIC devs](https://github.com/orgs/eic/teams/epic-devs) to gain write access to select repositories.
+For write access to select repositories, you may request to join teams such as [EPIC devs](https://github.com/orgs/eic/teams/epic-devs).
