@@ -1,4 +1,4 @@
-This organization collects all Electron-Ion Collider (EIC) software, repositories, documentation and resources. It is maintained by the EIC User Group Software Working Group and the EPIC Collaboration Working Groups.
+This organization collects all Electron-Ion Collider (EIC) software, repositories, documentation and resources. It is maintained by the EIC User Group Software Working Group and the EPIC Collaboration Software Working Groups.
 
 ## How to join?
 
