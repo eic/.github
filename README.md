@@ -1,4 +1,4 @@
-# EIC GitHub Workflows
+# EIC Organization Public Profile and Workflows
 
 ## Workflow templates
 
