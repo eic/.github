@@ -1,11 +1,5 @@
----
-name: Pull request
-about: Create a pull request to merge bug fixes or new features
-title: ''
-labels: ''
-assignees: ''
+### Briefly, what does this PR introduce?
 
----
 
 ### What kind of change does this PR introduce?
 - [ ] Bug fix (issue #__)
