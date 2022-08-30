@@ -1,0 +1,15 @@
+blank_issues_enabled: true
+contact_links:
+  - name: EICUG Software Working Group Meetings
+    url: https://indico.bnl.gov/category/301/
+    about: We hold weekly computing and software meetings.
+  - name: EPIC Detector Collaboration Computing and Software Meetings
+    url: https://indico.bnl.gov/category/410
+    about: We hold weekly computing and software meetings.
+  - name: EPIC Detector Collaboration Simulation, Production and QA Meetings
+    url: https://indico.bnl.gov/category/416
+    about: We hold weekly simulation, software, and QA meetings.
+  - name: EPIC Detector Collaboration Mattermost
+    url: https://eic.cloud.mattermost.com
+    about: Please ask and answer questions here.
+    
