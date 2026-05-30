@@ -116,6 +116,7 @@ jobs:
                     ... on PullRequest {
                       state
                       reviewDecision
+                      author { __typename }
                       latestReviews(first: 20) { nodes { state author { __typename } } }
                     }
                   }
@@ -123,7 +124,10 @@ jobs:
 
               STATE=$(echo "$DATA"    | jq -r '.data.resource.state')
               DECISION=$(echo "$DATA" | jq -r '.data.resource.reviewDecision // ""')
+              PR_AUTHOR_TYPE=$(echo "$DATA" | jq -r '.data.resource.author.__typename')
               NREVIEWS=$(echo "$DATA" | jq    '[.data.resource.latestReviews.nodes[] | select(.author.__typename == "User")] | length')
+              # A bot-authored PR reviewed only by its controller is not independently reviewed
+              if [ "$PR_AUTHOR_TYPE" = "Bot" ]; then NREVIEWS=0; fi
 
               # Archive PRs that have been closed or merged
               if [ "$STATE" != "OPEN" ]; then
