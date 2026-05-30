@@ -50,7 +50,8 @@ jobs:
           set -euo pipefail
 
           mapfile -t URLS < <(
-            gh search prs "org:eic review-requested:eic/epic-review-team is:open" \
+            gh search prs \
+              --owner eic --review-requested eic/epic-review-team --state open \
               --json url --limit 100 --jq '.[].url'
           )
           echo "Found ${#URLS[@]} open PRs with active team review request"
