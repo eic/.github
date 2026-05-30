@@ -1,0 +1,6 @@
+{
+  "name": "ePIC Review Board – real-time sync",
+  "description": "Trigger an immediate sync to the ePIC Review Board project (https://github.com/orgs/eic/projects/19) whenever a review is requested from eic/epic-review-team, a review is submitted, or a PR is closed.",
+  "iconName": "octicon workflow",
+  "categories": ["ePIC", "code-review", "project-management"]
+}

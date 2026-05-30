@@ -1,0 +1,135 @@
+# Syncs the ePIC Review Board (https://github.com/orgs/eic/projects/19)
+# for all eic org repositories.
+#
+# Runs every 15 minutes. Requires an org secret EPIC_REVIEW_BOARD_TOKEN
+# containing a PAT with scopes: project, repo, read:org.
+#
+# What this workflow does:
+#   1. Adds any open PR that has a pending review request from
+#      eic/epic-review-team but is not yet on the board.
+#   2. For every PR already on the board, syncs its column to reflect
+#      the current review state (Needs Review / In Review /
+#      Changes Requested / Approved).
+#   3. Archives items whose PR has been closed or merged.
+
+name: Sync ePIC Review Board
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      EPIC_REVIEW_BOARD_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync PR review status
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.EPIC_REVIEW_BOARD_TOKEN }}
+      PROJECT_NUMBER: "19"
+      PROJECT_ID:     "PVT_kwDOA7zONM4BZPiG"
+      STATUS_FIELD_ID: "PVTSSF_lADOA7zONM4BZPiGzhUPmRk"
+      OPT_NEEDS_REVIEW:       "21cae81d"
+      OPT_IN_REVIEW:          "59df07d6"
+      OPT_CHANGES_REQUESTED:  "2e6a5d80"
+      OPT_APPROVED:           "cf951501"
+
+    steps:
+      # ------------------------------------------------------------------
+      # Step 1 – Add any open PR with an active team review request that
+      #           is not yet on the board.
+      # ------------------------------------------------------------------
+      - name: Add new PRs with pending review requests
+        run: |
+          set -euo pipefail
+
+          mapfile -t URLS < <(
+            gh search prs "org:eic review-requested:eic/epic-review-team is:open" \
+              --json url --limit 100 --jq '.[].url'
+          )
+          echo "Found ${#URLS[@]} open PRs with active team review request"
+
+          for URL in "${URLS[@]}"; do
+            # Skip if already on the board
+            ALREADY=$(gh api graphql -f query='
+              query($u: URI!) {
+                resource(url: $u) {
+                  ... on PullRequest {
+                    projectItems(first: 10) {
+                      nodes { project { number } }
+                    }
+                  }
+                }
+              }' -f u="$URL" \
+              --jq '.data.resource.projectItems.nodes[] | select(.project.number == 19)' \
+              2>/dev/null || true)
+
+            if [ -z "$ALREADY" ]; then
+              echo "  Adding: $URL"
+              gh project item-add "$PROJECT_NUMBER" --owner eic --url "$URL" \
+                --format json > /dev/null
+            fi
+          done
+
+      # ------------------------------------------------------------------
+      # Step 2 – For every PR already on the board: sync its column and
+      #           archive it if the PR has been closed or merged.
+      # ------------------------------------------------------------------
+      - name: Sync status and archive closed PRs
+        run: |
+          set -euo pipefail
+
+          gh project item-list "$PROJECT_NUMBER" --owner eic \
+            --format json --limit 200 \
+            | jq -r '.items[]
+                     | select(.content.type == "PullRequest")
+                     | "\(.id)\t\(.content.url)"' \
+            | while IFS=$'\t' read -r ITEM_ID PR_URL; do
+
+              DATA=$(gh api graphql -f query='
+                query($u: URI!) {
+                  resource(url: $u) {
+                    ... on PullRequest {
+                      state
+                      reviewDecision
+                      latestReviews(first: 10) { nodes { state } }
+                    }
+                  }
+                }' -f u="$PR_URL")
+
+              STATE=$(echo "$DATA"    | jq -r '.data.resource.state')
+              DECISION=$(echo "$DATA" | jq -r '.data.resource.reviewDecision // ""')
+              NREVIEWS=$(echo "$DATA" | jq    '.data.resource.latestReviews.nodes | length')
+
+              # Archive PRs that have been closed or merged
+              if [ "$STATE" != "OPEN" ]; then
+                echo "  Archiving ($STATE): $PR_URL"
+                gh project item-archive "$PROJECT_NUMBER" --owner eic --id "$ITEM_ID"
+                continue
+              fi
+
+              # Map review state to board column
+              if   [ "$DECISION" = "APPROVED" ];          then
+                OPT="$OPT_APPROVED"; LABEL="Approved"
+              elif [ "$DECISION" = "CHANGES_REQUESTED" ]; then
+                OPT="$OPT_CHANGES_REQUESTED"; LABEL="Changes Requested"
+              elif [ "$NREVIEWS" -gt 0 ];                 then
+                OPT="$OPT_IN_REVIEW"; LABEL="In Review"
+              else
+                OPT="$OPT_NEEDS_REVIEW"; LABEL="Needs Review"
+              fi
+
+              echo "  → $LABEL: $PR_URL"
+              gh project item-edit \
+                --id "$ITEM_ID" \
+                --project-id "$PROJECT_ID" \
+                --field-id "$STATUS_FIELD_ID" \
+                --single-select-option-id "$OPT"
+
+            done
