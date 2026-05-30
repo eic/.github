@@ -26,6 +26,12 @@ on:
 permissions:
   contents: read
 
+# Prevent concurrent runs from racing while editing the same project board.
+# Queues a new run rather than cancelling in-progress ones.
+concurrency:
+  group: epic-review-board-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     name: Sync PR review status
@@ -50,26 +56,37 @@ jobs:
           set -euo pipefail
 
           mapfile -t URLS < <(
-            gh search prs \
-              --owner eic --review-requested eic/epic-review-team --state open \
-              --json url --limit 100 --jq '.[].url'
+            # When triggered by a per-repo real-time event (workflow_call),
+            # scope the search to that repo only to avoid an unnecessary
+            # org-wide scan on every review submission.
+            if [ "${{ github.event_name }}" = "workflow_call" ]; then
+              gh search prs \
+                --repo "${{ github.event.repository.full_name }}" \
+                --review-requested eic/epic-review-team --state open \
+                --json url --limit 1000 --jq '.[].url'
+            else
+              gh search prs \
+                --owner eic --review-requested eic/epic-review-team --state open \
+                --json url --limit 1000 --jq '.[].url'
+            fi
           )
           echo "Found ${#URLS[@]} open PRs with active team review request"
 
           for URL in "${URLS[@]}"; do
-            # Skip if already on the board
+            # Skip if already on the board.
+            # Use PROJECT_NUMBER env var and a generous page size so the
+            # check is not fooled by PRs that belong to many projects.
             ALREADY=$(gh api graphql -f query='
               query($u: URI!) {
                 resource(url: $u) {
                   ... on PullRequest {
-                    projectItems(first: 10) {
+                    projectItems(first: 100) {
                       nodes { project { number } }
                     }
                   }
                 }
               }' -f u="$URL" \
-              --jq '.data.resource.projectItems.nodes[] | select(.project.number == 19)' \
-              2>/dev/null || true)
+              | jq -r ".data.resource.projectItems.nodes[] | select(.project.number == $PROJECT_NUMBER)")
 
             if [ -z "$ALREADY" ]; then
               echo "  Adding: $URL"
@@ -87,7 +104,7 @@ jobs:
           set -euo pipefail
 
           gh project item-list "$PROJECT_NUMBER" --owner eic \
-            --format json --limit 200 \
+            --format json --limit 1200 \
             | jq -r '.items[]
                      | select(.content.type == "PullRequest")
                      | "\(.id)\t\(.content.url)"' \
