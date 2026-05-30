@@ -1,0 +1,33 @@
+# Optional starter workflow for individual repos that want real-time
+# (event-driven) column updates in addition to the 15-minute scheduled
+# sync that runs automatically in eic/.github.
+#
+# Usage: copy to .github/workflows/epic-review-board.yml in your repo.
+# Requires the EPIC_REVIEW_BOARD_TOKEN org secret (scopes: project, repo,
+# read:org).  No other configuration is needed.
+
+name: ePIC Review Board – real-time sync
+
+on:
+  pull_request:
+    types: [review_requested, closed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+
+jobs:
+  # Trigger a full sync whenever this repo has a relevant event.
+  # The reusable workflow is idempotent: it only adds/updates/archives
+  # items whose state has actually changed.
+  sync:
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.action == 'review_requested' &&
+       github.event.requested_team.slug == 'epic-review-team') ||
+      github.event_name == 'pull_request_review' ||
+      (github.event_name == 'pull_request' && github.event.action == 'closed')
+    uses: eic/.github/.github/workflows/sync-epic-review-board.yml@main
+    secrets:
+      EPIC_REVIEW_BOARD_TOKEN: ${{ secrets.EPIC_REVIEW_BOARD_TOKEN }}
