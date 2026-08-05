@@ -63,11 +63,13 @@ jobs:
               gh search prs \
                 --repo "${{ github.event.repository.full_name }}" \
                 --review-requested eic/epic-review-team --state open \
-                --json url --limit 1000 --jq '.[].url'
+                --json url --limit 1000 --jq '.[].url' \
+                -- -is:draft
             else
               gh search prs \
                 --owner eic --review-requested eic/epic-review-team --state open \
-                --json url --limit 1000 --jq '.[].url'
+                --json url --limit 1000 --jq '.[].url' \
+                -- -is:draft
             fi
           )
           echo "Found ${#URLS[@]} open PRs with active team review request"
@@ -115,6 +117,7 @@ jobs:
                   resource(url: $u) {
                     ... on PullRequest {
                       state
+                      merged
                       reviewDecision
                       author { __typename }
                       latestReviews(first: 20) { nodes { state author { __typename } } }
@@ -123,6 +126,7 @@ jobs:
                 }' -f u="$PR_URL")
 
               STATE=$(echo "$DATA"    | jq -r '.data.resource.state')
+              MERGED=$(echo "$DATA"   | jq -r '.data.resource.merged')
               DECISION=$(echo "$DATA" | jq -r '.data.resource.reviewDecision // ""')
               PR_AUTHOR_TYPE=$(echo "$DATA" | jq -r '.data.resource.author.__typename')
               NREVIEWS=$(echo "$DATA" | jq    '[.data.resource.latestReviews.nodes[] | select(.author.__typename == "User")] | length')
@@ -130,8 +134,10 @@ jobs:
               if [ "$PR_AUTHOR_TYPE" = "Bot" ]; then NREVIEWS=0; fi
 
               # Archive PRs that have been closed or merged
-              if [ "$STATE" != "OPEN" ]; then
-                echo "  Archiving ($STATE): $PR_URL"
+              if [ "$STATE" != "OPEN" ] || [ "$MERGED" = "true" ]; then
+                ARCHIVE_REASON="$STATE"
+                if [ "$MERGED" = "true" ]; then ARCHIVE_REASON="MERGED"; fi
+                echo "  Archiving ($ARCHIVE_REASON): $PR_URL"
                 gh project item-archive "$PROJECT_NUMBER" --owner eic --id "$ITEM_ID"
                 continue
               fi
