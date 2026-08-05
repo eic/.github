@@ -62,12 +62,14 @@ jobs:
             if [ "${{ github.event_name }}" = "workflow_call" ]; then
               gh search prs \
                 --repo "${{ github.event.repository.full_name }}" \
-                --review-requested eic/epic-review-team --state open --draft=false \
-                --json url --limit 1000 --jq '.[].url'
+                --review-requested eic/epic-review-team --state open \
+                --json url --limit 1000 --jq '.[].url' \
+                -- -is:draft
             else
               gh search prs \
-                --owner eic --review-requested eic/epic-review-team --state open --draft=false \
-                --json url --limit 1000 --jq '.[].url'
+                --owner eic --review-requested eic/epic-review-team --state open \
+                --json url --limit 1000 --jq '.[].url' \
+                -- -is:draft
             fi
           )
           echo "Found ${#URLS[@]} open PRs with active team review request"
